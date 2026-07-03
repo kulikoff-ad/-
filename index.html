@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Studio One File</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        background: #0b0b11;
+        color: #f2f2f5;
+      }
+
+      .wrap {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 28px;
+      }
+
+      p {
+        margin: 0;
+        color: #b5b6be;
+      }
+
+      .row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      input,
+      textarea,
+      button,
+      select {
+        font: inherit;
+      }
+
+      input,
+      textarea,
+      select {
+        width: 100%;
+        background: #141420;
+        color: #f2f2f5;
+        border: 1px solid #2a2a3a;
+        border-radius: 10px;
+        padding: 10px 12px;
+        outline: none;
+      }
+
+      input:focus,
+      textarea:focus,
+      select:focus {
+        border-color: #7c5cff;
+      }
+
+      button {
+        border: 0;
+        border-radius: 10px;
+        padding: 10px 14px;
+        cursor: pointer;
+        background: #1d1d2b;
+        color: #f2f2f5;
+      }
+
+      button:hover {
+        background: #27273a;
+      }
+
+      button.primary {
+        background: #6a4bff;
+      }
+
+      button.primary:hover {
+        background: #7a60ff;
+      }
+
+      button.active {
+        background: #f2f2f5;
+        color: #0b0b11;
+      }
+
+      .panel {
+        border: 1px solid #2a2a3a;
+        border-radius: 14px;
+        background: #10101a;
+        padding: 14px;
+      }
+
+      .chat-log {
+        height: 420px;
+        overflow: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin: 10px 0;
+      }
+
+      .msg {
+        max-width: 88%;
+        padding: 10px 12px;
+        border-radius: 12px;
+        line-height: 1.45;
+        white-space: pre-wrap;
+      }
+
+      .msg.user {
+        margin-left: auto;
+        background: #6a4bff;
+      }
+
+      .msg.assistant {
+        background: #1c1c2b;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .error {
+        color: #ff8f9f;
+        min-height: 20px;
+      }
+
+      img,
+      video,
+      audio {
+        width: 100%;
+        margin-top: 10px;
+      }
+
+      .file-list {
+        display: grid;
+        gap: 8px;
+      }
+
+      .code-view {
+        width: 100%;
+        min-height: 220px;
+        resize: vertical;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <header>
+        <h1>ChatGPT 5-4 / GPT 5-4 Codex / Sora 2 / GPT-Image / GPT Voice</h1>
+        <p>Один чистый index.html. Все режимы в одном файле.</p>
+      </header>
+
+      <section class="panel">
+        <label for="apiKey">API key (для браузера лучше pk_)</label>
+        <input id="apiKey" type="password" placeholder="pk_... или sk_..." />
+      </section>
+
+      <nav class="row" id="tabs">
+        <button data-tab="chat" class="active">Чат</button>
+        <button data-tab="image">GPT-Image</button>
+        <button data-tab="voice">GPT Voice</button>
+        <button data-tab="video">Sora 2</button>
+      </nav>
+
+      <p id="error" class="error"></p>
+
+      <section id="view-chat" class="panel">
+        <div class="row">
+          <button id="mode54" class="active">ChatGPT 5-4</button>
+          <button id="modeCodex">GPT 5-4 Codex</button>
+          <button id="exportChat">Экспорт</button>
+          <button id="clearChat">Очистить</button>
+        </div>
+        <div id="chatLog" class="chat-log"></div>
+        <form id="chatForm" class="row">
+          <input id="chatInput" placeholder="Напиши сообщение..." />
+          <button class="primary" type="submit">Отправить</button>
+        </form>
+      </section>
+
+      <section id="view-image" class="panel hidden">
+        <div class="row">
+          <input id="imagePrompt" value="cinematic neon city at night, rain, reflections, ultra detailed" />
+          <button id="makeImage" class="primary">Создать</button>
+        </div>
+        <img id="imageOut" alt="GPT-Image result" class="hidden" />
+      </section>
+
+      <section id="view-voice" class="panel hidden">
+        <div class="row">
+          <input id="voicePrompt" value="Привет! Это тест GPT Voice." />
+          <input id="voiceName" value="nova" style="max-width: 160px" />
+          <button id="makeVoice" class="primary">Создать голос</button>
+        </div>
+        <audio id="voiceOut" controls class="hidden"></audio>
+      </section>
+
+      <section id="view-video" class="panel hidden">
+        <div class="row">
+          <input id="videoPrompt" value="a drone flythrough over futuristic city skyline at sunrise" />
+          <button id="makeVideo" class="primary">Создать видео</button>
+        </div>
+        <video id="videoOut" controls class="hidden"></video>
+      </section>
+
+      <section class="panel">
+        <p>Виртуальные файлы проекта внутри index.html (включая package.json).</p>
+        <div class="row" style="margin-top: 8px">
+          <select id="fileSelect"></select>
+          <button id="downloadCurrent">Скачать файл</button>
+          <button id="downloadAll">Скачать все файлы</button>
+        </div>
+        <textarea id="fileViewer" class="code-view" readonly></textarea>
+      </section>
+    </main>
+
+    <script>
+      const STORAGE_KEYS = {
+        messages: 'one-file-chat-messages',
+        mode: 'one-file-chat-mode',
+      };
+
+      const state = {
+        tab: 'chat',
+        mode: localStorage.getItem(STORAGE_KEYS.mode) === 'gpt54codex' ? 'gpt54codex' : 'gpt54',
+        messages: loadMessages(),
+        loading: false,
+      };
+
+      const systemPrompts = {
+        gpt54: 'You are ChatGPT 5-4. Reply clearly and practically in the same language as the user.',
+        gpt54codex:
+          'You are GPT 5-4 Codex. Focus on coding, architecture, debugging, and implementation details. Reply in the same language as the user.',
+      };
+
+      const els = {
+        apiKey: document.getElementById('apiKey'),
+        tabs: document.getElementById('tabs'),
+        error: document.getElementById('error'),
+        mode54: document.getElementById('mode54'),
+        modeCodex: document.getElementById('modeCodex'),
+        chatLog: document.getElementById('chatLog'),
+        chatForm: document.getElementById('chatForm'),
+        chatInput: document.getElementById('chatInput'),
+        exportChat: document.getElementById('exportChat'),
+        clearChat: document.getElementById('clearChat'),
+        imagePrompt: document.getElementById('imagePrompt'),
+        makeImage: document.getElementById('makeImage'),
+        imageOut: document.getElementById('imageOut'),
+        voicePrompt: document.getElementById('voicePrompt'),
+        voiceName: document.getElementById('voiceName'),
+        makeVoice: document.getElementById('makeVoice'),
+        voiceOut: document.getElementById('voiceOut'),
+        videoPrompt: document.getElementById('videoPrompt'),
+        makeVideo: document.getElementById('makeVideo'),
+        videoOut: document.getElementById('videoOut'),
+        fileSelect: document.getElementById('fileSelect'),
+        fileViewer: document.getElementById('fileViewer'),
+        downloadCurrent: document.getElementById('downloadCurrent'),
+        downloadAll: document.getElementById('downloadAll'),
+      };
+
+      const embeddedFiles = {
+        'package.json': `{
+  "name": "ai-studio-one-file-export",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^7.3.2"
+  }
+}`,
+        'vite.config.ts': `import { defineConfig } from 'vite';
+
+export default defineConfig({});
+`,
+        'tsconfig.json': `{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "skipLibCheck": true
+  }
+}
+`,
+        'README.md': `# One-file AI Studio
+
+This export was generated from index.html.
+The actual app runs as a single file.
+`,
+      };
+
+      function loadMessages() {
+        const raw = localStorage.getItem(STORAGE_KEYS.messages);
+        if (!raw) {
+          return [
+            {
+              role: 'assistant',
+              content: 'Привет. Выбери режим ChatGPT 5-4 или GPT 5-4 Codex и начни диалог.',
+            },
+          ];
+        }
+        try {
+          const parsed = JSON.parse(raw);
+          if (!Array.isArray(parsed) || parsed.length === 0) {
+            throw new Error('bad');
+          }
+          return parsed;
+        } catch {
+          return [
+            {
+              role: 'assistant',
+              content: 'Привет. Выбери режим ChatGPT 5-4 или GPT 5-4 Codex и начни диалог.',
+            },
+          ];
+        }
+      }
+
+      function setError(text) {
+        els.error.textContent = text || '';
+      }
+
+      function appendKey(url) {
+        const key = els.apiKey.value.trim();
+        if (!key) {
+          return `${url}${url.includes('?') ? '&' : '?'}nologo=true`;
+        }
+        return `${url}${url.includes('?') ? '&' : '?'}key=${encodeURIComponent(key)}&nologo=true`;
+      }
+
+      function authHeaders() {
+        const headers = { 'Content-Type': 'application/json' };
+        const key = els.apiKey.value.trim();
+        if (key) {
+          headers.Authorization = `Bearer ${key}`;
+        }
+        return headers;
+      }
+
+      function switchTab(nextTab) {
+        state.tab = nextTab;
+        for (const btn of els.tabs.querySelectorAll('button')) {
+          btn.classList.toggle('active', btn.dataset.tab === nextTab);
+        }
+        document.getElementById('view-chat').classList.toggle('hidden', nextTab !== 'chat');
+        document.getElementById('view-image').classList.toggle('hidden', nextTab !== 'image');
+        document.getElementById('view-voice').classList.toggle('hidden', nextTab !== 'voice');
+        document.getElementById('view-video').classList.toggle('hidden', nextTab !== 'video');
+      }
+
+      function setupFileViewer() {
+        const names = Object.keys(embeddedFiles);
+        els.fileSelect.innerHTML = names
+          .map((name) => `<option value="${name}">${name}</option>`)
+          .join('');
+        renderSelectedFile();
+      }
+
+      function renderSelectedFile() {
+        const name = els.fileSelect.value;
+        els.fileViewer.value = embeddedFiles[name] || '';
+      }
+
+      function downloadTextFile(name, content) {
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      function downloadCurrentFile() {
+        const name = els.fileSelect.value;
+        if (!name) {
+          return;
+        }
+        downloadTextFile(name, embeddedFiles[name]);
+      }
+
+      function downloadAllFiles() {
+        const lines = [];
+        for (const [name, content] of Object.entries(embeddedFiles)) {
+          lines.push(`===== ${name} =====`);
+          lines.push(content);
+          lines.push('');
+        }
+        downloadTextFile('all-files-from-index.txt', lines.join('\n'));
+      }
+
+      function renderModeButtons() {
+        els.mode54.classList.toggle('active', state.mode === 'gpt54');
+        els.modeCodex.classList.toggle('active', state.mode === 'gpt54codex');
+      }
+
+      function renderChat() {
+        els.chatLog.innerHTML = '';
+        state.messages.forEach((m) => {
+          const div = document.createElement('div');
+          div.className = `msg ${m.role}`;
+          div.textContent = m.content;
+          els.chatLog.appendChild(div);
+        });
+        els.chatLog.scrollTop = els.chatLog.scrollHeight;
+        localStorage.setItem(STORAGE_KEYS.messages, JSON.stringify(state.messages));
+      }
+
+      async function sendChat(event) {
+        event.preventDefault();
+        if (state.loading) {
+          return;
+        }
+
+        const prompt = els.chatInput.value.trim();
+        if (!prompt) {
+          return;
+        }
+
+        setError('');
+        state.loading = true;
+        state.messages.push({ role: 'user', content: prompt });
+        els.chatInput.value = '';
+        renderChat();
+
+        try {
+          const response = await fetch('https://gen.pollinations.ai/v1/chat/completions', {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({
+              model: 'openai',
+              messages: [{ role: 'system', content: systemPrompts[state.mode] }, ...state.messages],
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+
+          const data = await response.json();
+          const reply = data?.choices?.[0]?.message?.content?.trim() || 'Пустой ответ от API.';
+          state.messages.push({ role: 'assistant', content: reply });
+        } catch (err) {
+          state.messages.push({
+            role: 'assistant',
+            content: 'Ошибка запроса. Проверь API key и доступность Pollinations API.',
+          });
+          setError(`Ошибка чата: ${err instanceof Error ? err.message : 'request failed'}`);
+        } finally {
+          state.loading = false;
+          renderChat();
+        }
+      }
+
+      function exportChat() {
+        const text = state.messages
+          .map((m) => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`)
+          .join('\n\n');
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `chat-${Date.now()}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      function clearChat() {
+        state.messages = [
+          { role: 'assistant', content: 'Диалог очищен. Можешь начать заново.' },
+        ];
+        renderChat();
+      }
+
+      function makeImage() {
+        setError('');
+        const prompt = els.imagePrompt.value.trim();
+        if (!prompt) {
+          return;
+        }
+        const seed = Math.floor(Math.random() * 1000000);
+        const base = `https://gen.pollinations.ai/image/${encodeURIComponent(prompt)}?model=gptimage&width=1024&height=1024&seed=${seed}`;
+        els.imageOut.src = appendKey(base);
+        els.imageOut.classList.remove('hidden');
+      }
+
+      let voiceBlobUrl = '';
+      async function makeVoice() {
+        setError('');
+        const text = els.voicePrompt.value.trim();
+        if (!text) {
+          return;
+        }
+        try {
+          const response = await fetch('https://gen.pollinations.ai/v1/audio/speech', {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({
+              model: 'tts-1',
+              input: text,
+              voice: els.voiceName.value.trim() || 'nova',
+            }),
+          });
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          const blob = await response.blob();
+          if (voiceBlobUrl) {
+            URL.revokeObjectURL(voiceBlobUrl);
+          }
+          voiceBlobUrl = URL.createObjectURL(blob);
+          els.voiceOut.src = voiceBlobUrl;
+          els.voiceOut.classList.remove('hidden');
+        } catch (err) {
+          setError(`Ошибка GPT Voice: ${err instanceof Error ? err.message : 'request failed'}`);
+        }
+      }
+
+      function makeVideo() {
+        setError('');
+        const prompt = els.videoPrompt.value.trim();
+        if (!prompt) {
+          return;
+        }
+        const base = `https://gen.pollinations.ai/video/${encodeURIComponent(prompt)}?model=sora2`;
+        els.videoOut.src = appendKey(base);
+        els.videoOut.classList.remove('hidden');
+      }
+
+      els.tabs.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-tab]');
+        if (!btn) {
+          return;
+        }
+        switchTab(btn.dataset.tab);
+      });
+
+      els.mode54.addEventListener('click', () => {
+        state.mode = 'gpt54';
+        localStorage.setItem(STORAGE_KEYS.mode, state.mode);
+        renderModeButtons();
+      });
+
+      els.modeCodex.addEventListener('click', () => {
+        state.mode = 'gpt54codex';
+        localStorage.setItem(STORAGE_KEYS.mode, state.mode);
+        renderModeButtons();
+      });
+
+      els.chatForm.addEventListener('submit', sendChat);
+      els.exportChat.addEventListener('click', exportChat);
+      els.clearChat.addEventListener('click', clearChat);
+      els.makeImage.addEventListener('click', makeImage);
+      els.makeVoice.addEventListener('click', makeVoice);
+      els.makeVideo.addEventListener('click', makeVideo);
+      els.fileSelect.addEventListener('change', renderSelectedFile);
+      els.downloadCurrent.addEventListener('click', downloadCurrentFile);
+      els.downloadAll.addEventListener('click', downloadAllFiles);
+
+      renderModeButtons();
+      renderChat();
+      switchTab('chat');
+      setupFileViewer();
+    </script>
+  </body>
+</html>
